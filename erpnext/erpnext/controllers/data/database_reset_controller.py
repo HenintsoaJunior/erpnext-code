@@ -7,7 +7,11 @@ import json
 @frappe.whitelist()
 def reset_specific_doctypes():
     try:
-        doctype_order = ["Import2", "Import1","Customer"]
+        doctype_order = ["Supplier","Item","Item Price","Item Default","Material Request Item", "Material Request","Supplier Quotation Item",
+                         "Supplier Quotation","Request for Quotation","Request for Quotation Item","Request for Quotation Supplier",
+                         "Purchase Order Item","Purchase Order","Purchase Receipt","Purchase Receipt Item","Payment Entry","Payment Request","Payment Entry Reference",
+                         "Purchase Invoice Item","Purchase Invoice","Stock Entry","Stock Entry Detail","Stock Ledger Entry","Bin","GL Entry"
+                        ]
         
         for doctype in doctype_order:
             if not frappe.db.exists("DocType", doctype):

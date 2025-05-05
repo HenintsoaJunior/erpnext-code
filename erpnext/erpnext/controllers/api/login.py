@@ -18,6 +18,8 @@ def login(usr, pwd):
 
     api_generate = generate_keys(frappe.session.user)
     user = frappe.get_doc('User', frappe.session.user)
+    frappe.cache().set_value(f"api_key_{user.name}", user.api_key)
+    frappe.cache().set_value(f"api_secret_{user.name}", api_generate)
 
     frappe.response["message"] = {
         "success_key":1,

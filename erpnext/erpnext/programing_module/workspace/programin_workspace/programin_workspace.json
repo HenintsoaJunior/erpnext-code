@@ -1,0 +1,65 @@
+{
+ "app": "erpnext",
+ "charts": [],
+ "content": "[{\"id\":\"r_znX1M26k\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Programin Workspace</span>\",\"col\":12}},{\"id\":\"NPBlDYOhxX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"_03YfGMBbb\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Import\",\"col\":3}},{\"id\":\"x9xXogCHG-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Visiteur\",\"col\":3}},{\"id\":\"_y3rt7unHF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Search Relation\",\"col\":3}}]",
+ "creation": "2025-04-29 08:42:31.481590",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "folder-normal-large",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Programin Workspace",
+ "link_to": "programing-workspace",
+ "link_type": "Page",
+ "links": [],
+ "modified": "2025-04-30 15:55:26.709535",
+ "modified_by": "Administrator",
+ "module": "programing module",
+ "name": "Programin Workspace",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 25.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Visiteur",
+   "link_to": "Visiteur",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Search Relation",
+   "link_to": "search",
+   "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Import",
+   "link_to": "Import1",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Programin Workspace",
+ "type": "Workspace"
+}
