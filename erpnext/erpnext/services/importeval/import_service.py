@@ -215,8 +215,9 @@ def fichier1_data_to_item():
     }
 
 def fichier2_data_to_supplier():
+    company = "IT UNIVERSITY"
     try:
-        fichier2_list = frappe.get_all("Fichier2", fields=["name", "supplier_name", "country", "type"])
+        fichier2_list = frappe.get_all("Fichier2", fields=["supplier_name", "country", "type"])
         
         if not fichier2_list:
             return {
@@ -231,7 +232,7 @@ def fichier2_data_to_supplier():
             if not fichier2.supplier_name:
                 results.append({
                     "status": "error",
-                    "message": f"Le champ supplier_name est requis pour le document Fichier2 {fichier2.name}.",
+                    "message": f"Le champ supplier_name est requis pour le document Fichier2.",
                     "data": None
                 })
                 continue
@@ -240,10 +241,8 @@ def fichier2_data_to_supplier():
             supplier_type = fichier2.type if fichier2.type else "Company"
             supplier_group = "Services"
             
-
-            default_currency = "USD"
+            default_currency = "EUR"
             # if fichier2.country:
-
             #     country_name = CountryAlias.get_country_name(fichier2.country)
             #     try:
             #         currency_mapping = frappe.get_all(
@@ -256,15 +255,14 @@ def fichier2_data_to_supplier():
             #             default_currency = currency_mapping[0].currency
             #         else:
             #             frappe.log_error(
-            #                 f"Aucune devise définie pour le pays {country_name} dans Fichier2 {fichier2.name}",
+            #                 f"Aucune devise définie pour le pays {country_name} dans Fichier2",
             #                 "Erreur fichier2_data_to_supplier"
             #             )
             #     except frappe.DoesNotExistError:
             #         frappe.log_error(
-            #             f"Pays {country_name} introuvable pour Fichier2 {fichier2.name}",
+            #             f"Pays {country_name} introuvable pour Fichier2",
             #             "Erreur fichier2_data_to_supplier"
             #         )
-
             
             result = create_new_supplier(
                 supplier_name=supplier_name,
@@ -273,8 +271,11 @@ def fichier2_data_to_supplier():
                 supplier_group=supplier_group
             )
             
+            abbr = frappe.get_value("Company", company, "abbr")
+            currency = f"{default_currency} - {abbr}"
+
+            insert_party_account("IT UNIVERSITY",currency,supplier_name,"accounts","Supplier")
             results.append({
-                "fichier2_name": fichier2.name,
                 "result": result
             })
         
@@ -301,7 +302,52 @@ def fichier2_data_to_supplier():
             "message": f"Erreur lors du traitement des documents Fichier2: {str(e)}",
             "data": []
         }
-    
+
+
+
+
+def insert_party_account(company, account, parent, parentfield, parenttype, advance_account=None):
+    # Validation des champs obligatoires
+    if not company:
+        frappe.throw(_("Le champ 'company' est obligatoire."))
+    if not account:
+        frappe.throw(_("Le champ 'account' est obligatoire."))
+    if not parent:
+        frappe.throw(_("Le champ 'parent' est obligatoire."))
+    if not parentfield:
+        frappe.throw(_("Le champ 'parentfield' est obligatoire."))
+    if not parenttype:
+        frappe.throw(_("Le champ 'parenttype' est obligatoire."))
+
+    if not frappe.db.exists("Company", company):
+        frappe.throw(_("L'entreprise {0} n'existe pas.").format(company))
+    if not frappe.db.exists("Account", account):
+        frappe.throw(_("Le compte {0} n'existe pas.").format(account))
+
+    party_account = frappe.get_doc({
+        "doctype": "Party Account",
+        "company": company,
+        "account": account,
+        "advance_account": advance_account,
+        "parent": parent,
+        "parentfield": parentfield,
+        "parenttype": parenttype
+    })
+
+    party_account.insert()
+
+    frappe.msgprint(_("Party Account {0} created and submitted").format(party_account.name))
+
+    return {
+        "name": party_account.name,
+        "company": party_account.company,
+        "account": party_account.account,
+        "parent": party_account.parent,
+        "parentfield": party_account.parentfield,
+        "parenttype": party_account.parenttype,
+        "advance_account": party_account.advance_account
+    }
+        
 def fichier1_data_to_warehouse():
     fields = [
         "target_warehouse"

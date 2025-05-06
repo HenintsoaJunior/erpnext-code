@@ -23,6 +23,8 @@ def create_new_supplier(supplier_name, default_currency="USD", supplier_type="Co
             supplier_group=supplier_group
         )
         frappe.db.commit()
+        frappe.msgprint(_("Supplier  {0} created and submitted").format(supplier.name))
+
         return {
             "status": "success",
             "message": f"Supplier {supplier.name} créé avec succès.",
@@ -100,6 +102,8 @@ def create_new_item(item_code,item_name, is_stock_item=1, valuation_rate=0, stoc
             company=company,
             item_group=item_group
         )
+
+        frappe.msgprint(_("Item  {0} created and submitted").format(item.name))
         return {
             "status": "success",
             "message": f"Item {item.name} créé avec succès.",
@@ -154,6 +158,7 @@ def create_request_for_quotation(material_request_name, suppliers=None, message_
         rfq_doc.submit()
         frappe.db.commit()
 
+        
         return {
             "status": "success",
             "message": f"RFQ créé et soumis avec les fournisseurs à partir de {material_request_name}.",

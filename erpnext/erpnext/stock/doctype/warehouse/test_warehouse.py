@@ -138,6 +138,8 @@ def create_warehouse_custom(warehouse_name, properties=None, company=None):
 		if properties:
 			w.update(properties)
 		w.save()
+		frappe.msgprint(_("Warehouse  {0} created and submitted").format(w.name))
+
 		return w.name
 	else:
 		return warehouse_id
