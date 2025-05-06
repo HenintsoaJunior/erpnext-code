@@ -238,7 +238,7 @@ def fichier2_data_to_supplier():
                 continue
             
             supplier_name = fichier2.supplier_name
-            supplier_type = fichier2.type if fichier2.type else "Company"
+            supplier_type = fichier2.type
             supplier_group = "Services"
             
             default_currency = "EUR"

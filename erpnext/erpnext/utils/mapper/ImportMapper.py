@@ -16,16 +16,106 @@ from erpnext.services.importeval.import_service import fichier1_data_to_item,fic
 logger = logging.getLogger(__name__)
 
 class ImportMapper:
-    
-    def __init__(self, doctypes, column_mappings, numeric_fields=None, valid_values=None, separator=","):
-        self.doctypes = doctypes
-        self.column_mappings = column_mappings
-        self.numeric_fields = numeric_fields or {}
-        self.valid_values = valid_values or {}  # New parameter for valid values validation
-        self.separator = separator
-        self.service = ImportService()
-        logger.info(f"ImportMapper initialized with {len(doctypes)} doctypes, {len(column_mappings)} mappings")
         
+    def __init__(self, doctypes, column_mappings, numeric_fields=None, date_validation=None, valid_values=None, separator=","):
+            self.doctypes = doctypes
+            self.column_mappings = column_mappings
+            self.numeric_fields = numeric_fields or {}
+            self.date_validation = date_validation or {}  # New parameter for date validation
+            self.valid_values = valid_values or {}
+            self.separator = separator
+            self.service = ImportService()
+            logger.info(f"ImportMapper initialized with {len(doctypes)} doctypes, {len(column_mappings)} mappings")        
+    
+    def validate_cross_file_columns(self, files_data, file1_name, file1_column, file2_name, file2_column):
+        try:
+            # Vérifier que les fichiers existent dans files_data
+            if file1_name not in files_data or file2_name not in files_data:
+                missing_file = file1_name if file1_name not in files_data else file2_name
+                return {
+                    "status": "error",
+                    "message": _("File {0} not found in files_data").format(missing_file),
+                    "valid_values": self.valid_values
+                }
+            
+            # Construire le dictionnaire pour _collect_files
+            files_to_collect = {
+                file1_name: files_data[file1_name],
+                file2_name: files_data[file2_name]
+            }
+            
+            files = self._collect_files(files_to_collect)
+            if not isinstance(files, dict):
+                return files
+            
+            file1_doc = files.get(file1_name)
+            file2_doc = files.get(file2_name)
+            
+            if not file1_doc or not file2_doc:
+                return {
+                    "status": "error",
+                    "message": _("One or both files not found"),
+                    "valid_values": self.valid_values
+                }
+            
+            file1_data = self.service.read_csv_file(file1_doc, self.separator)
+            file2_data = self.service.read_csv_file(file2_doc, self.separator)
+            
+            file1_values = set()
+            for row in file1_data:
+                if file1_column in row and row[file1_column]:
+                    file1_values.add(str(row[file1_column]).strip())
+            
+            file2_values = []
+            missing_values = []
+            for row_index, row in enumerate(file2_data):
+                if file2_column in row and row[file2_column]:
+                    value = str(row[file2_column]).strip()
+                    file2_values.append(value)
+                    if value not in file1_values:
+                        missing_values.append({
+                            "row": row_index + 2,
+                            "value": value,
+                            "file": file2_doc.file_name,
+                            "column": file2_column
+                        })
+            
+            if missing_values:
+                if file2_name not in self.valid_values:
+                    self.valid_values[file2_name] = {}
+                self.valid_values[file2_name][file2_column] = list(file1_values)
+                
+                # Construire un message détaillé avec les lignes et valeurs manquantes
+                error_details = [
+                    _("Ligne {0}: Valeur '{1}'").format(err["row"], err["value"])
+                    for err in missing_values
+                ]
+                error_message = _("Certaines valeurs dans la colonne {0} de {1} n'existent pas dans la colonne {2} de {3}: {4}").format(
+                    file2_column, file2_name, file1_column, file1_name, "; ".join(error_details)
+                )
+                
+                return {
+                    "status": "error",
+                    "message": error_message,
+                    "details": missing_values,
+                    "valid_values": self.valid_values
+                }
+            
+            return {
+                "status": "success",
+                "message": _("All values in {0} column of {1} exist in {2} column of {3}").format(
+                    file2_column, file2_name, file1_column, file1_name
+                ),
+                "valid_values": self.valid_values
+            }
+            
+        except Exception as e:
+            logger.exception(f"Error in validate_cross_file_columns: {str(e)}")
+            return {
+                "status": "error",
+                "message": _("Error validating cross-file columns: {0}").format(str(e)),
+                "valid_values": self.valid_values
+            }
     def process_import(self, files_data):
         try:
             files = self._collect_files(files_data)
@@ -144,6 +234,8 @@ class ImportMapper:
                 num_fields = self.numeric_fields.get(input_name, [])
                 # Validate fields with valid value constraints
                 valid_value_fields = self.valid_values.get(input_name, {})
+                # Validate date fields with range constraints
+                date_validations = self.date_validation.get(input_name, {})
                 
                 for row_index, row in enumerate(csv_data):
                     # Numeric validation
@@ -198,6 +290,60 @@ class ImportMapper:
                                         )
                                     }
                                     validation_errors.append(error)
+                                else:
+                                    # Date range validation
+                                    if csv_field in date_validations:
+                                        date_config = date_validations[csv_field]
+                                        min_date = date_config.get("min_date")
+                                        max_date = date_config.get("max_date")
+                                        
+                                        # Handle 'today' for max_date
+                                        if max_date == "today":
+                                            max_date = datetime.now().strftime('%Y-%m-%d')
+                                        
+                                        try:
+                                            date_obj = datetime.strptime(converted_date, '%Y-%m-%d')
+                                            if min_date:
+                                                min_date_obj = datetime.strptime(min_date, '%Y-%m-%d')
+                                                if date_obj < min_date_obj:
+                                                    error = {
+                                                        "row": row_index + 2,
+                                                        "field": csv_field,
+                                                        "file": file.file_name,
+                                                        "input_name": input_name,
+                                                        "value": date_value,
+                                                        "message": _("La date '{0}' dans la colonne '{1}' à la ligne {2} du fichier '{3}' est antérieure à la date minimale autorisée ({4})").format(
+                                                            date_value, csv_field, row_index + 2, file.file_name, min_date
+                                                        )
+                                                    }
+                                                    validation_errors.append(error)
+                                            if max_date:
+                                                max_date_obj = datetime.strptime(max_date, '%Y-%m-%d')
+                                                if date_obj > max_date_obj:
+                                                    error = {
+                                                        "row": row_index + 2,
+                                                        "field": csv_field,
+                                                        "file": file.file_name,
+                                                        "input_name": input_name,
+                                                        "value": date_value,
+                                                        "message": _("La date '{0}' dans la colonne '{1}' à la ligne {2} du fichier '{3}' est postérieure à la date maximale autorisée ({4})").format(
+                                                            date_value, csv_field, row_index + 2, file.file_name, max_date
+                                                        )
+                                                    }
+                                                    validation_errors.append(error)
+                                        except ValueError as e:
+                                            logger.error(f"Error parsing date boundaries for {csv_field}: {str(e)}")
+                                            error = {
+                                                "row": row_index + 2,
+                                                "field": csv_field,
+                                                "file": file.file_name,
+                                                "input_name": input_name,
+                                                "value": date_value,
+                                                "message": _("Erreur de validation des limites de date pour '{0}' à la ligne {1} du fichier '{2}': {3}").format(
+                                                    date_value, row_index + 2, file.file_name, str(e)
+                                                )
+                                            }
+                                            validation_errors.append(error)
             
             if validation_errors:
                 logger.error(f"Data validation errors: {validation_errors}")
@@ -217,7 +363,6 @@ class ImportMapper:
         except Exception as e:
             logger.exception(f"Error validating CSV data: {str(e)}")
             return self._create_error_response("validation", _("Error during data validation: {0}").format(str(e)))
-
         
                 
     def _process_csv_data(self, csv_data, mapped_date_fields):
