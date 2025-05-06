@@ -11,6 +11,7 @@ class ImportController(Document):
     pass
 
 @frappe.whitelist(allow_guest=False)
+@frappe.whitelist(allow_guest=False)
 def import_csv_files(files_data):
     try:
         files_data = json.loads(files_data) if isinstance(files_data, str) else files_data
@@ -49,22 +50,61 @@ def import_csv_files(files_data):
             },
             numeric_fields={
                 "Fichier1": ["quantity"]
-                # "Fichier2": ["customer_name"]
+            },
+            date_validation={
+                "Fichier1": {
+                    "date": {
+                        "min_date": None,
+                        "max_date": None       
+                    }
+                }
             },
             valid_values={
                 "Fichier1": {
                    "item_groupe": ["piece", "consommable"],
                    "purpose": ["Purchase"], 
                 },
-                # "input2": {
-                #    "csv_column_name": ["ITEM001", "ITEM002"]
-                # }
+                "Fichier2": {
+                   "type": ["Company", "Individual", "Partnership"], 
+                },
+                "Fichier3": {}
             },
             separator=","
         )
         
+        all_errors = []
+        
+        logger.info("Validating ref_request_quotation against ref")
+        validation_result = mapper.validate_cross_file_columns(
+            files_data=files_data,
+            file1_name="Fichier1",
+            file1_column="ref",
+            file2_name="Fichier3",
+            file2_column="ref_request_quotation"
+        )
+        
+        if validation_result["status"] == "error":
+            logger.warning(f"Cross-file validation failed: {validation_result['message']}")
+            all_errors.append({
+                "code": "cross_file_validation",
+                "field": "ref_request_quotation",
+                "message": validation_result["message"],
+                "details": validation_result.get("details")
+            })
+        
         logger.info("Calling process_import")
         import_result = mapper.process_import(files_data)
+        
+        if import_result["status"] == "errors":
+            all_errors.extend(import_result["errors"])
+        
+        if all_errors:
+            return {
+                "status": "errors",
+                "data": None,
+                "errors": all_errors
+            }
+        
         return import_result
         
     except json.JSONDecodeError as json_error:
