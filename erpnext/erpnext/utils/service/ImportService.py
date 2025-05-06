@@ -10,18 +10,57 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ImportService:
+    # Dans la méthode handle_file_errors de ImportService
     def handle_file_errors(self, files):
-        """
-        Handle file upload errors
-        """
-        logger.info(f"Checking for file errors, filesCount: {len(files)}")
         errors = []
+        logger.info(f"Checking for file errors, filesCount: {len(files)}")
         
         for input_name, file in files.items():
-            if file and not self._is_valid_file(file):
-                error_message = f"{input_name.replace('fileInput', 'Fichier ').capitalize()}: Erreur de fichier"
-                errors.append(error_message)
-                logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_message}")
+            try:
+                logger.info(f"Checking file: {input_name}, file_name: {file.file_name}")
+                
+                # Vérifier si le fichier existe
+                if not file or not hasattr(file, 'file_url') or not frappe.db.exists("File", file.name):
+                    error_msg = f"{input_name}: Erreur de fichier: Fichier non trouvé ou invalide"
+                    logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_msg}")
+                    errors.append(error_msg)
+                    continue
+                
+                # Obtenir le contenu du fichier
+                try:
+                    content = file.get_content()
+                    if not content:
+                        error_msg = f"{input_name}: Erreur de fichier: Fichier vide"
+                        logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_msg}")
+                        errors.append(error_msg)
+                        continue
+                    
+                    # Conversion en texte si nécessaire
+                    if isinstance(content, bytes):
+                        try:
+                            text_content = content.decode('utf-8')
+                        except UnicodeDecodeError:
+                            error_msg = f"{input_name}: Erreur de fichier: Problème d'encodage"
+                            logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_msg}")
+                            errors.append(error_msg)
+                            continue
+                    else:
+                        # Le contenu est déjà une chaîne de caractères
+                        text_content = content
+                    
+                    # Vérifier si c'est un CSV valide
+                    # Autres validations...
+                    
+                except Exception as e:
+                    error_msg = f"{input_name}: Erreur de fichier: {str(e)}"
+                    logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_msg}")
+                    errors.append(error_msg)
+                    continue
+                    
+            except Exception as e:
+                error_msg = f"{input_name}: Erreur de fichier: {str(e)}"
+                logger.error(f"File error detected, inputName: {input_name}, errorMessage: {error_msg}")
+                errors.append(error_msg)
         
         logger.info(f"File error check complete, errorsCount: {len(errors)}")
         return errors

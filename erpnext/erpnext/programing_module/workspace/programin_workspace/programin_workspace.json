@@ -1,7 +1,7 @@
 {
  "app": "erpnext",
  "charts": [],
- "content": "[{\"id\":\"r_znX1M26k\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Programin Workspace</span>\",\"col\":12}},{\"id\":\"NPBlDYOhxX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"_03YfGMBbb\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Import\",\"col\":3}},{\"id\":\"x9xXogCHG-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Visiteur\",\"col\":3}},{\"id\":\"_y3rt7unHF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Search Relation\",\"col\":3}}]",
+ "content": "[{\"id\":\"r_znX1M26k\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Programin Workspace</span>\",\"col\":12}},{\"id\":\"_y3rt7unHF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Search Relation\",\"col\":3}},{\"id\":\"qzqxuIdc0c\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Itemgroupalias\",\"col\":3}},{\"id\":\"fXkA35FM3W\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Countryalias\",\"col\":3}},{\"id\":\"r98YsSreT4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Country Currency\",\"col\":3}}]",
  "creation": "2025-04-29 08:42:31.481590",
  "custom_blocks": [],
  "docstatus": 0,
@@ -16,7 +16,7 @@
  "link_to": "programing-workspace",
  "link_type": "Page",
  "links": [],
- "modified": "2025-04-30 15:55:26.709535",
+ "modified": "2025-05-06 11:35:14.188148",
  "modified_by": "Administrator",
  "module": "programing module",
  "name": "Programin Workspace",
@@ -31,16 +31,24 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Item",
-   "link_to": "Item",
+   "label": "Country Currency",
+   "link_to": "Country Currency",
    "stats_filter": "[]",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Visiteur",
-   "link_to": "Visiteur",
+   "label": "Countryalias",
+   "link_to": "CountryAlias",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Itemgroupalias",
+   "link_to": "ItemGroupAlias",
    "stats_filter": "[]",
    "type": "DocType"
   },
@@ -50,14 +58,6 @@
    "label": "Search Relation",
    "link_to": "search",
    "type": "Page"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Import",
-   "link_to": "Import1",
-   "stats_filter": "[]",
-   "type": "DocType"
   }
  ],
  "title": "Programin Workspace",

@@ -557,7 +557,8 @@ def make_request_for_quotation(source_name, target_doc=None):
 		},
 		target_doc,
 	)
-
+	frappe.msgprint(_("Item  {0} Request For Quotation and submitted").format(source_name))
+        
 	return doclist
 
 

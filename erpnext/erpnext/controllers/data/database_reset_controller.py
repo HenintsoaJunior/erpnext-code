@@ -9,8 +9,8 @@ def reset_specific_doctypes():
     try:
         doctype_order = ["Supplier","Item","Item Price","Item Default","Material Request Item", "Material Request","Supplier Quotation Item",
                          "Supplier Quotation","Request for Quotation","Request for Quotation Item","Request for Quotation Supplier",
-                         "Purchase Order Item","Purchase Order","Purchase Receipt","Purchase Receipt Item","Payment Entry","Payment Request","Payment Entry Reference",
-                         "Purchase Invoice Item","Purchase Invoice","Stock Entry","Stock Entry Detail","Stock Ledger Entry","Bin","GL Entry"
+                         "Purchase Order Item","Purchase Order","Purchase Receipt","Purchase Receipt Item","Payment Entry","Payment Request","Payment Entry Reference","Payment Ledger Entry",
+                         "Purchase Invoice Item","Purchase Invoice","Stock Entry","Stock Entry Detail","Stock Ledger Entry","Bin","GL Entry","Fichier1","Fichier2","Fichier3","Warehouse","Party Account"
                         ]
         
         for doctype in doctype_order:

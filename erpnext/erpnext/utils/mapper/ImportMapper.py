@@ -9,8 +9,8 @@ import io
 import os
 import uuid
 import tempfile
-from erpnext.services.customers.customer_service import import_customers_from_import2
 
+from erpnext.services.importeval.import_service import fichier1_data_to_item,fichier1_data_to_material_request,fichier1_data_to_warehouse,fichier2_data_to_supplier,fichier3_data_to_request_for_quotation
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -53,8 +53,11 @@ class ImportMapper:
             if result["status"] == "success":
                 frappe.db.commit()
                 logger.info("Import completed successfully")
-                import_customers_from_import2()
-
+                fichier1_data_to_warehouse()
+                fichier1_data_to_item()
+                fichier1_data_to_material_request()
+                fichier2_data_to_supplier()
+                fichier3_data_to_request_for_quotation()
             
             return result
             

@@ -124,6 +124,27 @@ def create_warehouse(warehouse_name, properties=None, company=None):
 		return warehouse_id
 
 
+def create_warehouse_custom(warehouse_name, properties=None, company=None):
+	if not company:
+		company = "_Test Company"
+
+	warehouse_id = erpnext.encode_company_abbr(warehouse_name, company)
+	if not frappe.db.exists("Warehouse", warehouse_id):
+		w = frappe.new_doc("Warehouse")
+		w.warehouse_name = warehouse_name
+		w.parent_warehouse = None
+		w.company = company
+		w.account = get_warehouse_account(warehouse_name, company)
+		if properties:
+			w.update(properties)
+		w.save()
+		frappe.msgprint(_("Warehouse  {0} created and submitted").format(w.name))
+
+		return w.name
+	else:
+		return warehouse_id
+
+
 def get_warehouse(**args):
 	args = frappe._dict(args)
 	if frappe.db.exists("Warehouse", args.warehouse_name + " - " + args.abbr):

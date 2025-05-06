@@ -23,6 +23,8 @@ def create_new_supplier(supplier_name, default_currency="USD", supplier_type="Co
             supplier_group=supplier_group
         )
         frappe.db.commit()
+        frappe.msgprint(_("Supplier  {0} created and submitted").format(supplier.name))
+
         return {
             "status": "success",
             "message": f"Supplier {supplier.name} créé avec succès.",
@@ -42,6 +44,7 @@ def create_new_supplier(supplier_name, default_currency="USD", supplier_type="Co
 
 def create_item(
     item_code,
+    item_name,
     is_stock_item=1,
     valuation_rate=0,
     stock_uom="Nos",
@@ -55,13 +58,14 @@ def create_item(
     buying_cost_center=None,
     selling_cost_center=None,
     company="_Test Company",
+    item_group=None
 ):
     if not frappe.db.exists("Item", item_code):
         item = frappe.new_doc("Item")
         item.item_code = item_code
-        item.item_name = item_code
+        item.item_name = item_name
         item.description = item_code
-        item.item_group = "All Item Groups"
+        item.item_group = item_group
         item.stock_uom = stock_uom
         item.is_stock_item = is_stock_item
         item.is_fixed_asset = is_fixed_asset
@@ -86,16 +90,20 @@ def create_item(
     return item
 
 @frappe.whitelist()
-def create_new_item(item_code, is_stock_item=1, valuation_rate=0, stock_uom="Nos", warehouse="_Test Warehouse - _TC", company="_Test Company"):
+def create_new_item(item_code,item_name, is_stock_item=1, valuation_rate=0, stock_uom="Nos", warehouse="_Test Warehouse - _TC", company="_Test Company",item_group="All Item Groups"):
     try:
         item = create_item(
             item_code=item_code,
+            item_name=item_name,
             is_stock_item=is_stock_item,
             valuation_rate=valuation_rate,
             stock_uom=stock_uom,
             warehouse=warehouse,
-            company=company
+            company=company,
+            item_group=item_group
         )
+
+        frappe.msgprint(_("Item  {0} created and submitted").format(item.name))
         return {
             "status": "success",
             "message": f"Item {item.name} créé avec succès.",
@@ -113,8 +121,8 @@ def create_new_item(item_code, is_stock_item=1, valuation_rate=0, stock_uom="Nos
         }
 ##########################################################MATERIAL REQUEST####################################################################
 @frappe.whitelist()
-def create_material_request(material_request_type, company, schedule_date, items, customer=None,set_warehouse=None):
-    return _create_material_request(material_request_type, company, schedule_date, items, customer,set_warehouse)
+def create_material_request(ref,material_request_type, company, schedule_date, items, customer=None,set_warehouse=None):
+    return _create_material_request(ref,material_request_type, company, schedule_date, items, customer,set_warehouse)
 
 
 ##########################################################REQUEST FOR QUOTATION####################################################################
@@ -150,6 +158,7 @@ def create_request_for_quotation(material_request_name, suppliers=None, message_
         rfq_doc.submit()
         frappe.db.commit()
 
+        
         return {
             "status": "success",
             "message": f"RFQ créé et soumis avec les fournisseurs à partir de {material_request_name}.",

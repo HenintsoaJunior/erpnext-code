@@ -4,7 +4,6 @@ from frappe.model.document import Document
 import json
 from erpnext.utils.mapper.ImportMapper import ImportMapper
 import logging
-        
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +14,7 @@ class ImportController(Document):
 def import_csv_files(files_data):
     try:
         files_data = json.loads(files_data) if isinstance(files_data, str) else files_data
+        
         if not files_data:
             frappe.throw(_("Missing required parameter: files_data"))
             
@@ -22,30 +22,42 @@ def import_csv_files(files_data):
         
         mapper = ImportMapper(
             doctypes={
-                "input1": "Import1",
-                "input2": "Import2"
+                "Fichier1": "Fichier1",
+                "Fichier2": "Fichier2",
+                "Fichier3": "Fichier3" 
             },
             column_mappings={
-                "input1": {
-                    "csv_column_name": "item_code",
-                    "name_column": "item_name",
-                    "date_test": "date_test"
+                "Fichier1": {
+                    "date": "date",
+                    "item_name": "item_name",
+                    "item_groupe": "item_groupe",
+                    "required_by": "required_by",
+                    "quantity": "quantity",
+                    "purpose": "purpose",
+                    "target_warehouse": "target_warehouse",
+                    "ref": "ref"
                 },
-                "input2": {
-                    "customer_name": "customer_name",
-                    "customer_type": "customer_type",
+                "Fichier2": {
+                    "supplier_name": "supplier_name",
+                    "country": "country",
+                    "type": "type"
+                },
+                "Fichier3": {
+                    "ref_request_quotation": "ref_request_quotation",
+                    "supplier": "supplier"
                 }
             },
             numeric_fields={
-                # "input1": ["csv_column_name"],
-                # "input2": ["customer_name"]
+                "Fichier1": ["quantity"]
+                # "Fichier2": ["customer_name"]
             },
             valid_values={
-                # "input1": {
-                #     "csv_column_name": ["ITEM001", "ITEM002"]
-                # },
+                "Fichier1": {
+                   "item_groupe": ["piece", "consommable"],
+                   "purpose": ["Purchase"], 
+                },
                 # "input2": {
-                #     "csv_column_name": ["ITEM001", "ITEM002"]
+                #    "csv_column_name": ["ITEM001", "ITEM002"]
                 # }
             },
             separator=","
@@ -53,7 +65,6 @@ def import_csv_files(files_data):
         
         logger.info("Calling process_import")
         import_result = mapper.process_import(files_data)
-
         return import_result
         
     except json.JSONDecodeError as json_error:
