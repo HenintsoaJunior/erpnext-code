@@ -176,6 +176,7 @@ def create_supplier(**args):
 			"default_currency": args.default_currency,
 			"supplier_type": args.supplier_type or "Company",
 			"tax_withholding_category": args.tax_withholding_category,
+			"country":args.country
 		}
 	)
 	if not args.without_supplier_group:
