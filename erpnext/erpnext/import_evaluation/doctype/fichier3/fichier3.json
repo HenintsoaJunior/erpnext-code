@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-05 15:25:13.807093",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "ref_request_quotation",
+  "supplier"
+ ],
+ "fields": [
+  {
+   "fieldname": "ref_request_quotation",
+   "fieldtype": "Data",
+   "label": "ref_request_quotation"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Data",
+   "label": "supplier"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-05-05 15:25:58.551186",
+ "modified_by": "Administrator",
+ "module": "import-evaluation",
+ "name": "Fichier3",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

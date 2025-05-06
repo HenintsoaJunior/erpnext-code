@@ -204,7 +204,7 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
         `)
         .appendTo('head');
 
-    // HTML form avec deux champs de type file
+    // HTML form avec TROIS champs de type file
     $(wrapper).find('.layout-main-section').html(`
         <div class="import-container">
             <div class="import-header">
@@ -227,6 +227,16 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
                     <div class="file-input-container">
                         <input type="file" id="csv-file-2" accept=".csv" required>
                         <div class="file-placeholder" id="placeholder-2">
+                            <i class="fa fa-file-csv"></i>
+                            Cliquez ou glissez le fichier CSV ici
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="csv-file-3">Fichier CSV 3</label>
+                    <div class="file-input-container">
+                        <input type="file" id="csv-file-3" accept=".csv" required>
+                        <div class="file-placeholder" id="placeholder-3">
                             <i class="fa fa-file-csv"></i>
                             Cliquez ou glissez le fichier CSV ici
                         </div>
@@ -269,6 +279,22 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
         }
     });
 
+    // Handler pour le troisième fichier
+    $('#csv-file-3').on('change', function() {
+        const fileName = this.files[0] ? this.files[0].name : null;
+        if (fileName) {
+            $('#placeholder-3').addClass('file-selected').html(`
+                <i class="fa fa-file-csv"></i>
+                <span class="file-name">${fileName}</span>
+            `);
+        } else {
+            $('#placeholder-3').removeClass('file-selected').html(`
+                <i class="fa fa-file-csv"></i>
+                Cliquez ou glissez le fichier CSV ici
+            `);
+        }
+    });
+
     // Debug CSRF token availability
     if (!frappe.csrf_token) {
         console.error("CSRF token is not available. Ensure you are logged in and the page is loaded in an authenticated context.");
@@ -283,16 +309,17 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
 
         const fileInput1 = $('#csv-file-1')[0].files[0];
         const fileInput2 = $('#csv-file-2')[0].files[0];
+        const fileInput3 = $('#csv-file-3')[0].files[0]; // Nouveau fichier
 
         // Validate inputs
-        if (!fileInput1 || !fileInput2) {
-            $('#import-result').html(`<div class="alert alert-danger">Veuillez sélectionner les deux fichiers CSV.</div>`);
+        if (!fileInput1 || !fileInput2 || !fileInput3) {
+            $('#import-result').html(`<div class="alert alert-danger">Veuillez sélectionner les trois fichiers CSV.</div>`);
             return;
         }
 
         // Validate file size (optional, max 10MB per file)
         const maxSize = 10 * 1024 * 1024; // 10MB
-        if (fileInput1.size > maxSize || fileInput2.size > maxSize) {
+        if (fileInput1.size > maxSize || fileInput2.size > maxSize || fileInput3.size > maxSize) {
             $('#import-result').html(`<div class="alert alert-danger">La taille d'un fichier dépasse la limite autorisée de 10MB.</div>`);
             return;
         }
@@ -345,18 +372,20 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
         `);
         $('#import-button').prop('disabled', true);
 
-        // Upload both files
-        Promise.all([uploadFile(fileInput1), uploadFile(fileInput2)])
+        // Upload all three files
+        Promise.all([uploadFile(fileInput1), uploadFile(fileInput2), uploadFile(fileInput3)])
             .then(fileResults => {
                 const fileIds = {
-                    "input1": fileResults[0].id,
-                    "input2": fileResults[1].id
+                    "Fichier1": fileResults[0].id,
+                    "Fichier2": fileResults[1].id,
+                    "Fichier3": fileResults[2].id  // Ajout du troisième fichier
                 };
                 
                 // Store file names for reference
                 const fileNames = {
-                    "input1": fileResults[0].name,
-                    "input2": fileResults[1].name
+                    "Fichier1": fileResults[0].name,
+                    "Fichier2": fileResults[1].name,
+                    "Fichier3": fileResults[2].name  // Ajout du troisième fichier
                 };
                 
                 console.log("Files uploaded successfully, fileIds:", fileIds);
@@ -375,7 +404,7 @@ frappe.pages['importdata'].on_page_load = function(wrapper) {
                     </div>
                 `);
 
-                // Call the import controller with both file IDs
+                // Call the import controller with all file IDs
                 frappe.call({
                     method: 'erpnext.controllers.data.ImportController.import_csv_files',
                     args: {

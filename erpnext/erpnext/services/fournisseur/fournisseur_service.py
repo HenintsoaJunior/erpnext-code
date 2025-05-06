@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-
+from erpnext.services.buying.buying_service import create_supplier_quotation_from_rfq
 ###########################################################COMMANDE###################################################################
 def is_order_paid(order_name):
     """Check if a purchase order has at least one paid invoice."""
@@ -16,18 +16,28 @@ def is_order_paid(order_name):
         return False
 
 def is_order_received(order_name):
-    """Check if a purchase order has at least one submitted purchase receipt."""
     try:
-        receipts = frappe.get_all(
-            "Purchase Receipt Item",
-            filters={"purchase_order": order_name, "docstatus": 1},
-            limit=1
+        # Récupérer tous les articles de la Purchase Order
+        order_items = frappe.get_all(
+            "Purchase Order Item",
+            filters={"parent": order_name, "docstatus": 1},
+            fields=["item_code", "qty", "received_qty"]
         )
-        return len(receipts) > 0
+
+        if not order_items:
+            return False
+
+        # Vérifier si tous les articles ont été entièrement reçus
+        for item in order_items:
+            if item.received_qty < item.qty:
+                return False
+
+        return True
+
     except Exception as e:
         frappe.log_error(f"Error in is_order_received for order {order_name}: {str(e)}")
         return False
-
+    
 def get_paid_order_names():
     """Retrieve names of purchase orders with paid invoices."""
     try:
@@ -189,7 +199,107 @@ def get_all_suppliers():
             "data": None,
             "errors": str(e)
         }
-    
+
+
+def get_all_request_for_quotations(supplier=None):
+    try:
+        filters = {"docstatus": 1}  # Inclut uniquement les RFQ soumis (non annulés)
+        
+        if supplier:
+            rfq_names = frappe.get_all(
+                "Request for Quotation Supplier",
+                filters={"supplier": supplier},
+                fields=["parent"]
+            )
+            rfq_name_list = [rfq["parent"] for rfq in rfq_names]
+            if not rfq_name_list:
+                return {
+                    "status": "success",
+                    "data": {
+                        "quotations": [],
+                        "count": 0
+                    },
+                    "message": f"Aucune demande de devis trouvée pour le fournisseur: {supplier}",
+                    "errors": None
+                }
+            filters["name"] = ["in", rfq_name_list]
+        
+        rfq_data = frappe.get_all(
+            "Request for Quotation",
+            filters=filters,
+            fields=[
+                "name",
+                "transaction_date",
+                "status"
+            ],
+            order_by="creation desc"
+        )
+        
+        for rfq in rfq_data:
+            items = frappe.get_all(
+                "Request for Quotation Item",
+                filters={"parent": rfq["name"]},
+                fields=["item_code", "item_name", "qty"]
+            )
+            rfq["items"] = items
+            
+            suppliers = frappe.get_all(
+                "Request for Quotation Supplier",
+                filters={"parent": rfq["name"]},
+                fields=["supplier", "supplier_name"]
+            )
+            rfq["suppliers"] = suppliers
+            
+            # Récupérer les Supplier Quotations liées à la RFQ
+            supplier_quotations = frappe.get_all(
+                "Supplier Quotation",
+                filters={"request_for_quotation": rfq["name"], "docstatus": 1},
+                fields=[
+                    "name",
+                    "supplier",
+                    "supplier_name",
+                    "transaction_date",
+                    "grand_total",
+                    "status"
+                ]
+            )
+            
+            # Pour chaque Supplier Quotation, récupérer ses articles
+            for sq in supplier_quotations:
+                sq_items = frappe.get_all(
+                    "Supplier Quotation Item",
+                    filters={"parent": sq["name"]},
+                    fields=["item_code", "item_name", "qty","rate","amount"]
+                )
+                sq["items"] = sq_items
+            
+            # Si aucune Supplier Quotation n'est trouvée, assigner un tableau vide
+            rfq["supplier_quotations"] = supplier_quotations if supplier_quotations else []
+            
+            # Les Supplier Quotation Items sont déjà inclus dans chaque Supplier Quotation,
+            # mais si aucune Supplier Quotation, supplier_quotation_items sera vide
+            rfq["supplier_quotation_items"] = [] if not supplier_quotations else [
+                item for sq in supplier_quotations for item in sq["items"]
+            ]
+        
+        return {
+            "status": "success",
+            "data": {
+                "quotations": rfq_data,
+                "count": len(rfq_data)
+            },
+            "message": f"Données des demandes de devis récupérées avec succès. Filtre par supplier: {supplier or 'Aucun'}",
+            "errors": None
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erreur lors de la récupération des demandes de devis: {str(e)}",
+            "data": None,
+            "errors": str(e)
+        }
+                   
 def get_all_supplier_quotations(supplier=None):
     try:
         filters = {"status": ["!=", "Cancelled"]}  # Exclut les devis avec status "Cancelled"
@@ -237,11 +347,37 @@ def get_all_supplier_quotations(supplier=None):
         }
 
 
+###########################################################UPDATE CREATE SUPPLIER###################################################################
+def make_request_quotation_price(quotation_name, item_code, rate):
+	try:
+		supplier = frappe.db.get_value(
+			"Request for Quotation Supplier",
+			{"parent": quotation_name},
+			"supplier"
+		)
+
+		if not supplier:
+			return {
+				"status": "error",
+				"message": f"Aucun fournisseur trouvé pour la RFQ {quotation_name}."
+			}
+
+		item_rates = {item_code: rate}
+
+		return create_supplier_quotation_from_rfq(quotation_name, supplier, item_rates)
+
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Erreur dans make_request_quotation_price")
+		return {
+			"status": "error",
+			"message": f"Erreur lors du traitement : {str(e)}"
+		}
 
 ###########################################################UPDATE###################################################################
 
+
 @frappe.whitelist()
-def update_quotation_item():
+def make_update_quotation_item():
     try:
         success, result = extract_and_validate_request_data()
         if not success:
