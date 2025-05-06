@@ -239,11 +239,12 @@ def fichier2_data_to_supplier():
             
             supplier_name = fichier2.supplier_name
             supplier_type = fichier2.type
+            country_name = fichier2.country
             supplier_group = "Services"
             
-            default_currency = "EUR"
-            # if fichier2.country:
-            #     country_name = CountryAlias.get_country_name(fichier2.country)
+            default_currency = "USD"
+            if fichier2.country:
+                country_name = CountryAlias.get_country_name(fichier2.country)
             #     try:
             #         currency_mapping = frappe.get_all(
             #             'Country Currency',
@@ -268,7 +269,8 @@ def fichier2_data_to_supplier():
                 supplier_name=supplier_name,
                 default_currency=default_currency,
                 supplier_type=supplier_type,
-                supplier_group=supplier_group
+                supplier_group=supplier_group,
+                country=country_name
             )
             
             abbr = frappe.get_value("Company", company, "abbr")

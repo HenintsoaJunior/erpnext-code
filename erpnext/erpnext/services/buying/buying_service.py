@@ -14,13 +14,14 @@ import json
 ##########################################################SUPPLIER####################################################################
 
 @frappe.whitelist()
-def create_new_supplier(supplier_name, default_currency="USD", supplier_type="Company", supplier_group="Services"):
+def create_new_supplier(supplier_name, default_currency="USD", supplier_type="Company", supplier_group="Services",country=None):
     try:
         supplier = create_supplier(
             supplier_name=supplier_name,
             default_currency=default_currency,
             supplier_type=supplier_type,
-            supplier_group=supplier_group
+            supplier_group=supplier_group,
+            country=country
         )
         frappe.db.commit()
         frappe.msgprint(_("Supplier  {0} created and submitted").format(supplier.name))
